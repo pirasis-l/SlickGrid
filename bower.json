@@ -2,7 +2,7 @@
   "name": "SlickGrid",
   "version": "1.0.0-beta.1",
   "ignore": [
-    "MIT_LICENSE.txt",
+    "MIT-LICENSE.txt",
     "README.md"
   ],
   "main": [
