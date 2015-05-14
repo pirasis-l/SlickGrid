@@ -79,6 +79,7 @@ if (typeof Slick === "undefined") {
       enableTextSelectionOnCells: false,
       dataItemColumnValueExtractor: null,
       fullWidthRows: false,
+      enableThreeStepsSorting: false,
       multiColumnSort: false,
       defaultFormatter: defaultFormatter,
       forceSyncScrolling: false,
@@ -566,12 +567,16 @@ if (typeof Slick === "undefined") {
           for (; i < sortColumns.length; i++) {
             if (sortColumns[i].columnId == column.id) {
               sortOpts = sortColumns[i];
-              sortOpts.sortAsc = !sortOpts.sortAsc;
+              if (options.enableThreeStepsSorting && sortOpts.sortAsc === false) {
+                delete sortOpts.sortAsc;
+              } else {
+                sortOpts.sortAsc = !sortOpts.sortAsc;
+              }
               break;
             }
           }
 
-          if (e.metaKey && options.multiColumnSort) {
+          if ((e.metaKey && options.multiColumnSort) || (sortOpts && typeof sortOpts.sortAsc === 'undefined' && options.enableThreeStepsSorting)) {
             if (sortOpts) {
               sortColumns.splice(i, 1);
             }
