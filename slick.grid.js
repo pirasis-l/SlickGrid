@@ -155,6 +155,7 @@ if (typeof Slick === "undefined") {
 
     var columnsById = {};
     var sortColumns = [];
+    var columnGroups = [];
     var columnPosLeft = [];
     var columnPosRight = [];
 
@@ -451,39 +452,6 @@ if (typeof Slick === "undefined") {
       $boundAncestors = null;
     }
 
-    function updateColumnHeader(columnId, title, toolTip) {
-      if (!initialized) { return; }
-      var idx = getColumnIndex(columnId);
-      if (idx == null) {
-        return;
-      }
-
-      var columnDef = columns[idx];
-      var $header = $headers.children().eq(idx);
-      if ($header) {
-        if (title !== undefined) {
-          columns[idx].name = title;
-        }
-        if (toolTip !== undefined) {
-          columns[idx].toolTip = toolTip;
-        }
-
-        trigger(self.onBeforeHeaderCellDestroy, {
-          "node": $header[0],
-          "column": columnDef
-        });
-
-        $header
-            .attr("title", toolTip || "")
-            .children().eq(0).html(title);
-
-        trigger(self.onHeaderCellRendered, {
-          "node": $header[0],
-          "column": columnDef
-        });
-      }
-    }
-
     function createColumnHeaders() {
       function onMouseEnter() {
         $(this).addClass("ui-state-hover");
@@ -506,6 +474,8 @@ if (typeof Slick === "undefined") {
       $headers.empty();
       $headers.width(getHeadersWidth());
 
+      var $headerGroups = {};
+
       for (var i = 0; i < columns.length; i++) {
         var m = columns[i];
 
@@ -515,8 +485,28 @@ if (typeof Slick === "undefined") {
             .attr("id", "" + uid + m.id)
             .attr("title", m.toolTip || "")
             .data("column", m)
-            .addClass(m.headerCssClass || "")
-            .appendTo($headers);
+            .addClass(m.headerCssClass || "");
+
+        if (m.group != null) {
+          var groupId = m.group;
+          var group = columnGroups[groupId];
+          if (!$headerGroups[groupId]) {
+            var $group = $("<div class='slick-header-column-group'/>")
+              .html("<div class='slick-header-column-group-name'>" + group.name + "</div><div class='slick-header-group-container'></div>")
+              .appendTo($headers);
+            $headerGroups[groupId] = {
+              el: $group,
+              container: $group.find(".slick-header-group-container"),
+              width: 0
+            };
+          }
+          var g = $headerGroups[groupId];
+          g.container.append(header);
+          g.width += m.width - headerColumnWidthDiff + 10;
+          g.el.width(g.width - 10);
+        } else {
+          header.appendTo($headers);
+        }
 
         if (options.enableColumnReorder || m.sortable) {
           header
@@ -1080,7 +1070,7 @@ if (typeof Slick === "undefined") {
     function setSortColumns(cols) {
       sortColumns = cols;
 
-      var headerColumnEls = $headers.children();
+      var headerColumnEls = $headers.find('.slick-header-column');
       headerColumnEls
           .removeClass("slick-header-column-sorted")
           .find(".slick-sort-indicator")
@@ -1142,8 +1132,9 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    function setColumns(columnDefinitions) {
+    function setColumns(columnDefinitions, columnGroupDefinitions) {
       columns = columnDefinitions;
+      columnGroups = columnGroupDefinitions || {};
 
       columnsById = {};
       for (var i = 0; i < columns.length; i++) {
@@ -3243,7 +3234,6 @@ if (typeof Slick === "undefined") {
       "getColumns": getColumns,
       "setColumns": setColumns,
       "getColumnIndex": getColumnIndex,
-      "updateColumnHeader": updateColumnHeader,
       "setSortColumn": setSortColumn,
       "setSortColumns": setSortColumns,
       "getSortColumns": getSortColumns,
