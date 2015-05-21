@@ -641,7 +641,7 @@ if (typeof Slick === "undefined") {
 
     function setupColumnResize() {
       var $col, j, c, pageX, columnElements, minPageX, maxPageX, firstResizable, lastResizable;
-      columnElements = $headers.children();
+      columnElements = $headers.find(".slick-header-column");
       columnElements.find(".slick-resizable-handle").remove();
       columnElements.each(function (i, e) {
         if (columns[i].resizable) {
@@ -1039,12 +1039,25 @@ if (typeof Slick === "undefined") {
 
     function applyColumnHeaderWidths() {
       if (!initialized) { return; }
-      var h;
-      for (var i = 0, headers = $headers.children(), ii = headers.length; i < ii; i++) {
+      var h, g;
+      var groups = {};
+      for (var i = 0, headers = $headers.find(".slick-header-column"), ii = headers.length; i < ii; i++) {
         h = $(headers[i]);
         if (h.width() !== columns[i].width - headerColumnWidthDiff) {
           h.width(columns[i].width - headerColumnWidthDiff);
         }
+        if (columns[i].group != null) {
+          g = columns[i].group;
+          groups[g] = {
+            width: (groups[g] || {width: 0}).width + h.outerWidth(),
+            groupEl: h.parents(".slick-header-column-group")
+          };
+        }
+      }
+
+      for (var i in groups) {
+        group = groups[i];
+        group.groupEl.width(group.width);
       }
 
       updateColumnCaches();
