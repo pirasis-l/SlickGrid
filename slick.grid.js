@@ -604,50 +604,71 @@ if (typeof Slick === "undefined") {
     }
 
     function setupColumnReorder() {
-      $headers.filter(":ui-sortable").sortable("destroy");
-      $headers.sortable({
-        containment: "parent",
-        distance: 3,
-        axis: "x",
-        cursor: "default",
-        tolerance: "intersection",
-        helper: "clone",
-        placeholder: "slick-sortable-placeholder ui-state-default slick-header-column",
-        start: function (e, ui) {
-          ui.placeholder.width(ui.helper.outerWidth() - headerColumnWidthDiff);
-          $(ui.helper).addClass("slick-header-column-active");
-        },
-        beforeStop: function (e, ui) {
-          $(ui.helper).removeClass("slick-header-column-active");
-        },
-        stop: function (e) {
-          if (!getEditorLock().commitCurrentEdit()) {
-            $(this).sortable("cancel");
-            return;
-          }
+      var sortableHeaders = [$headers].concat($headers.children(".slick-header-column-group").children(".slick-header-group-container"));
+      $.each(sortableHeaders, function (i, headers) {
+        $(headers).filter(":ui-sortable").sortable("destroy");
+        $(headers).sortable({
+          containment: "parent",
+          distance: 3,
+          axis: "x",
+          cursor: "default",
+          tolerance: "intersection",
+          helper: "clone",
+          placeholder: "slick-sortable-placeholder ui-state-default slick-header-column",
+          start: function (e, ui) {
+            ui.placeholder.width(ui.helper.outerWidth() - headerColumnWidthDiff);
+            $(ui.helper).addClass("slick-header-column-active");
+          },
+          beforeStop: function (e, ui) {
+            $(ui.helper).removeClass("slick-header-column-active");
+          },
+          stop: function (e) {
+            if (!getEditorLock().commitCurrentEdit()) {
+              $(this).sortable("cancel");
+              return;
+            }
 
-          var reorderedIds = $headers.sortable("toArray");
-          var reorderedColumns = [];
-          for (var i = 0; i < reorderedIds.length; i++) {
-            var columnId = reorderedIds[i].replace(uid, "");
-            if (/^group_\d/.test(columnId)) {
-              var groupId = parseInt(/^group_(\d+)/.exec(columnId)[1], 10);
-              for (var j = 0; j < columns.length; j++) {
-                var column = columns[j];
+            var i, j, column, columnId, groupId;
+
+            var isReorderingInGroup = $(e.target).hasClass("slick-header-group-container");
+            var reorderedIds = $(e.target).sortable("toArray");
+            var reorderedColumns = [];
+
+            if (isReorderingInGroup) {
+              groupId = columns[getColumnIndex(reorderedIds[0].replace(uid, ""))].group;
+              for (i = 0, j = columns.length; i < j; i++) {
+                column = columns[i];
                 if (column.group === groupId) {
+                  reorderedColumns.push(columns[getColumnIndex(reorderedIds.shift().replace(uid, ""))]);
+                } else {
                   reorderedColumns.push(column);
                 }
               }
             } else {
-              reorderedColumns.push(columns[getColumnIndex(columnId)]);
-            }
-          }
-          setColumns(reorderedColumns, columnGroups);
+              for (i = 0; i < reorderedIds.length; i++) {
+                columnId = reorderedIds[i].replace(uid, "");
+                if (/^group_\d/.test(columnId)) {
+                  groupId = parseInt(/^group_(\d+)/.exec(columnId)[1], 10);
+                  for (j = 0; j < columns.length; j++) {
+                    column = columns[j];
+                    if (column.group === groupId) {
+                      reorderedColumns.push(column);
+                    }
+                  }
+                } else {
+                  reorderedColumns.push(columns[getColumnIndex(columnId)]);
+                }
+              }
 
-          trigger(self.onColumnsReordered, {});
-          e.stopPropagation();
-          setupColumnResize();
-        }
+            }
+
+            setColumns(reorderedColumns, columnGroups);
+
+            trigger(self.onColumnsReordered, {});
+            e.stopPropagation();
+            setupColumnResize();
+          }
+        });
       });
     }
 
