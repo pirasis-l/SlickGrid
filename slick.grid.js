@@ -493,6 +493,7 @@ if (typeof Slick === "undefined") {
           if (!$headerGroups[groupId]) {
             var $group = $("<div class='slick-header-column-group'/>")
               .html("<div class='slick-header-column-group-name'>" + group.name + "</div><div class='slick-header-group-container'></div>")
+              .attr("id", "" + uid + "group_" + groupId)
               .appendTo($headers);
             $headerGroups[groupId] = {
               el: $group,
@@ -628,9 +629,20 @@ if (typeof Slick === "undefined") {
           var reorderedIds = $headers.sortable("toArray");
           var reorderedColumns = [];
           for (var i = 0; i < reorderedIds.length; i++) {
-            reorderedColumns.push(columns[getColumnIndex(reorderedIds[i].replace(uid, ""))]);
+            var columnId = reorderedIds[i].replace(uid, "");
+            if (/^group_\d/.test(columnId)) {
+              var groupId = parseInt(/^group_(\d+)/.exec(columnId)[1], 10);
+              for (var j = 0; j < columns.length; j++) {
+                var column = columns[j];
+                if (column.group === groupId) {
+                  reorderedColumns.push(column);
+                }
+              }
+            } else {
+              reorderedColumns.push(columns[getColumnIndex(columnId)]);
+            }
           }
-          setColumns(reorderedColumns);
+          setColumns(reorderedColumns, columnGroups);
 
           trigger(self.onColumnsReordered, {});
           e.stopPropagation();
