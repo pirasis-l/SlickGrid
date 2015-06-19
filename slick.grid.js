@@ -496,15 +496,17 @@ if (typeof Slick === "undefined") {
               .attr("id", "" + uid + "group_" + groupId)
               .appendTo($headers);
             $headerGroups[groupId] = {
+              childrenCount: 0,
               el: $group,
               container: $group.find(".slick-header-group-container"),
               width: 0
             };
           }
           var g = $headerGroups[groupId];
+          g.childrenCount++;
           g.container.append(header);
           g.width += m.width - headerColumnWidthDiff + 10;
-          g.el.width(g.width - 10 - 2);
+          g.el.width(g.width - g.childrenCount);
         } else {
           header.appendTo($headers);
         }
