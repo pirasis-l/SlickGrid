@@ -504,7 +504,7 @@ if (typeof Slick === "undefined") {
           }
           var g = $headerGroups[groupId];
           g.childrenCount++;
-          g.container.append(header);
+          header.appendTo(g.container);
           g.width += m.width - headerColumnWidthDiff + 10;
           g.el.width(g.width - g.childrenCount);
         } else {
