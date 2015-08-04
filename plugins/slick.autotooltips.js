@@ -73,7 +73,7 @@
     function handleHeaderMouseEnter(e, args) {
       var column = args.column,
           $node = $(e.currentTarget).find(".slick-column-name");
-      if (!column.toolTip) {
+      if (column && !column.toolTip) {
         $node.attr("title", ($node[0].offsetWidth < $node[0].scrollWidth) ? column.name : "");
       }
     }
