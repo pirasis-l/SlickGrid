@@ -491,7 +491,7 @@ if (typeof Slick === "undefined") {
           var groupId = m.group;
           var group = columnGroups[groupId];
           if (!$headerGroups[groupId]) {
-            var $group = $("<div class='slick-header-column-group'/>")
+            var $group = $("<div class='slick-header-column-group slick-header-column-group-" + groupId + "'/>")
               .html("<div class='slick-header-column-group-name'>" + group.name + "</div><div class='slick-header-group-container'></div>")
               .attr("id", "" + uid + "group_" + groupId)
               .appendTo($headers);
