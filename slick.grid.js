@@ -212,7 +212,6 @@ if (typeof Slick === "undefined") {
       $headers.width(getHeadersWidth());
 
       $viewport = $("<div class='slick-viewport' style='width:100%;overflow:auto;outline:0;position:relative;;'>").appendTo($container);
-      $viewport.css("overflow-y", "auto");
 
       $canvas = $("<div class='grid-canvas' />").appendTo($viewport);
 
