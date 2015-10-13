@@ -27,7 +27,6 @@ if (typeof Slick === "undefined") {
   throw "slick.core.js not loaded";
 }
 
-
 (function ($) {
   // Slick.Grid
   $.extend(true, window, {
@@ -58,26 +57,20 @@ if (typeof Slick === "undefined") {
       explicitInitialization: false,
       rowHeight: 25,
       defaultColumnWidth: 80,
-      enableAddRow: false,
-      leaveSpaceForNewRows: false,
-      autoEdit: true,
       enableCellNavigation: true,
       enableColumnReorder: true,
       forceFitColumns: false,
       enableAsyncPostRender: false,
       asyncPostRenderDelay: 50,
-      autoHeight: false,
       formatterFactory: null,
       cellFlashingCssClass: "flashing",
       selectedCellCssClass: "selected",
-      multiSelect: true,
       dataItemColumnValueExtractor: null,
       fullWidthRows: false,
       enableThreeStepsSorting: false,
       multiColumnSort: false,
       defaultFormatter: defaultFormatter,
-      forceSyncScrolling: false,
-      addNewRowCssClass: "new-row"
+      forceSyncScrolling: false
     };
 
     var columnDefaults = {
@@ -150,7 +143,6 @@ if (typeof Slick === "undefined") {
     var columnPosLeft = [];
     var columnPosRight = [];
 
-
     // async call handles
     var h_render = null;
     var h_postrender = null;
@@ -167,7 +159,6 @@ if (typeof Slick === "undefined") {
     var rowNodeFromLastMouseWheelEvent;  // this node must not be deleted while inertial scrolling
     var zombieRowNodeFromLastMouseWheelEvent;  // node that was hidden instead of getting deleted
 
-
     //////////////////////////////////////////////////////////////////////////////////////////////
     // Initialization
 
@@ -182,7 +173,6 @@ if (typeof Slick === "undefined") {
       scrollbarDimensions = scrollbarDimensions || measureScrollbar();
 
       options = $.extend({}, defaults, options);
-      validateAndEnforceOptions();
       columnDefaults.width = options.defaultColumnWidth;
 
       columnsById = {};
@@ -221,7 +211,7 @@ if (typeof Slick === "undefined") {
       $headers.width(getHeadersWidth());
 
       $viewport = $("<div class='slick-viewport' style='width:100%;overflow:auto;outline:0;position:relative;;'>").appendTo($container);
-      $viewport.css("overflow-y", options.autoHeight ? "hidden" : "auto");
+      $viewport.css("overflow-y", "auto");
 
       $canvas = $("<div class='grid-canvas' />").appendTo($viewport);
 
@@ -915,7 +905,6 @@ if (typeof Slick === "undefined") {
       $container.empty().removeClass(uid);
     }
 
-
     //////////////////////////////////////////////////////////////////////////////////////////////
     // General
 
@@ -1151,21 +1140,9 @@ if (typeof Slick === "undefined") {
     }
 
     function setOptions(args) {
-      if (options.enableAddRow !== args.enableAddRow) {
-        invalidateRow(getDataLength());
-      }
-
       options = $.extend(options, args);
-      validateAndEnforceOptions();
 
-      $viewport.css("overflow-y", options.autoHeight ? "hidden" : "auto");
       render();
-    }
-
-    function validateAndEnforceOptions() {
-      if (options.autoHeight) {
-        options.leaveSpaceForNewRows = false;
-      }
     }
 
     function setData(newData, scrollToTop) {
@@ -1187,10 +1164,6 @@ if (typeof Slick === "undefined") {
       } else {
         return data.length;
       }
-    }
-
-    function getDataLengthIncludingAddNew() {
-      return getDataLength() + (options.enableAddRow ? 1 : 0);
     }
 
     function getDataItem(i) {
@@ -1455,17 +1428,11 @@ if (typeof Slick === "undefined") {
 
     function resizeCanvas() {
       if (!initialized) { return; }
-      if (options.autoHeight) {
-        viewportH = options.rowHeight * getDataLengthIncludingAddNew();
-      } else {
-        viewportH = getViewportHeight();
-      }
+      viewportH = getViewportHeight();
 
       numVisibleRows = Math.ceil(viewportH / options.rowHeight);
       viewportW = parseFloat($.css($container[0], "width", true));
-      if (!options.autoHeight) {
-        $viewport.height(viewportH);
-      }
+      $viewport.height(viewportH);
 
       if (options.forceFitColumns) {
         autosizeColumns();
@@ -1481,17 +1448,14 @@ if (typeof Slick === "undefined") {
     function updateRowCount() {
       if (!initialized) { return; }
 
-      var dataLengthIncludingAddNew = getDataLengthIncludingAddNew();
-      var numberOfRows = dataLengthIncludingAddNew +
-          (options.leaveSpaceForNewRows ? numVisibleRows - 1 : 0);
+      var numberOfRows = getDataLength();
 
       var oldViewportHasVScroll = viewportHasVScroll;
-      // with autoHeight, we do not need to accommodate the vertical scroll bar
-      viewportHasVScroll = !options.autoHeight && (numberOfRows * options.rowHeight > viewportH);
+      viewportHasVScroll = numberOfRows * options.rowHeight > viewportH;
 
       // remove the rows that are now outside of the data range
       // this helps avoid redundant calls to .removeRow() when the size of the data decreased by thousands of rows
-      var l = dataLengthIncludingAddNew - 1;
+      var l = numberOfRows - 1;
       for (var i in rowsCache) {
         if (i >= l) {
           removeRowFromCache(i);
@@ -1534,10 +1498,6 @@ if (typeof Slick === "undefined") {
         scrollTo(th - viewportH);
       }
 
-      if (h != oldH && options.autoHeight) {
-        resizeCanvas();
-      }
-
       if (options.forceFitColumns && oldViewportHasVScroll != viewportHasVScroll) {
         autosizeColumns();
       }
@@ -1577,7 +1537,7 @@ if (typeof Slick === "undefined") {
       }
 
       range.top = Math.max(0, range.top);
-      range.bottom = Math.min(getDataLengthIncludingAddNew() - 1, range.bottom);
+      range.bottom = Math.min(getDataLength() - 1, range.bottom);
 
       range.leftPx -= viewportW;
       range.rightPx += viewportW;
@@ -1812,7 +1772,7 @@ if (typeof Slick === "undefined") {
       renderRows(rendered);
 
       postProcessFromRow = visible.top;
-      postProcessToRow = Math.min(getDataLengthIncludingAddNew() - 1, visible.bottom);
+      postProcessToRow = Math.min(getDataLength() - 1, visible.bottom);
       startPostProcessing();
 
       lastRenderedScrollTop = scrollTop;
@@ -2108,7 +2068,7 @@ if (typeof Slick === "undefined") {
       }
 
       if ((activeCell != cell.cell || activeRow != cell.row) && canCellBeActive(cell.row, cell.cell)) {
-        scrollRowIntoView(cell.row, false);
+        scrollRowIntoView(cell.row);
         setActiveCellInternal(getCellNode(cell.row, cell.cell));
       }
     }
@@ -2263,8 +2223,8 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    function scrollCellIntoView(row, cell, doPaging) {
-      scrollRowIntoView(row, doPaging);
+    function scrollCellIntoView(row, cell) {
+      scrollRowIntoView(row);
 
       var colspan = getColspan(row, cell);
       var left = columnPosLeft[cell],
@@ -2282,7 +2242,7 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    function setActiveCellInternal(newCell, opt_editMode) {
+    function setActiveCellInternal(newCell) {
       if (activeCellNode !== null) {
         $(activeCellNode).removeClass("active");
         if (rowsCache[activeRow]) {
@@ -2296,10 +2256,6 @@ if (typeof Slick === "undefined") {
       if (activeCellNode != null) {
         activeRow = getRowFromNode(activeCellNode.parentNode);
         activeCell = activePosX = getCellFromNode(activeCellNode);
-
-        if (opt_editMode == null) {
-          opt_editMode = (activeRow == getDataLength()) || options.autoEdit;
-        }
 
         $(activeCellNode).addClass("active");
         $(rowsCache[activeRow].rowNode).addClass("active");
@@ -2393,18 +2349,18 @@ if (typeof Slick === "undefined") {
       return activeCellNode;
     }
 
-    function scrollRowIntoView(row, doPaging) {
+    function scrollRowIntoView(row) {
       var rowAtTop = row * options.rowHeight;
       var rowAtBottom = (row + 1) * options.rowHeight - viewportH + (viewportHasHScroll ? scrollbarDimensions.height : 0);
 
       // need to page down?
       if ((row + 1) * options.rowHeight > scrollTop + viewportH + offset) {
-        scrollTo(doPaging ? rowAtTop : rowAtBottom);
+        scrollTo(rowAtBottom);
         render();
       }
       // or page up?
       else if (row * options.rowHeight < scrollTop + offset) {
-        scrollTo(doPaging ? rowAtBottom : rowAtTop);
+        scrollTo(rowAtTop);
         render();
       }
     }
@@ -2421,9 +2377,9 @@ if (typeof Slick === "undefined") {
 
       if (options.enableCellNavigation && activeRow != null) {
         var row = activeRow + deltaRows;
-        var dataLengthIncludingAddNew = getDataLengthIncludingAddNew();
-        if (row >= dataLengthIncludingAddNew) {
-          row = dataLengthIncludingAddNew - 1;
+        var dataLength = getDataLength();
+        if (row >= dataLength) {
+          row = dataLength - 1;
         }
         if (row < 0) {
           row = 0;
@@ -2468,8 +2424,7 @@ if (typeof Slick === "undefined") {
       } else {
         colspan = colspan || 1;
       }
-
-      return colspan;
+      return colspan || 1;
     }
 
     function findFirstFocusableCell(row) {
@@ -2502,8 +2457,7 @@ if (typeof Slick === "undefined") {
 
       do {
         cell += getColspan(row, cell);
-      }
-      while (cell < columns.length && !canCellBeActive(row, cell));
+      } while (cell < columns.length && !canCellBeActive(row, cell));
 
       if (cell < columns.length) {
         return {
@@ -2545,9 +2499,9 @@ if (typeof Slick === "undefined") {
 
     function gotoDown(row, cell, posX) {
       var prevCell;
-      var dataLengthIncludingAddNew = getDataLengthIncludingAddNew();
+      var dataLength = getDataLength();
       while (true) {
-        if (++row >= dataLengthIncludingAddNew) {
+        if (++row >= dataLength) {
           return null;
         }
 
@@ -2608,8 +2562,8 @@ if (typeof Slick === "undefined") {
       }
 
       var firstFocusableCell = null;
-      var dataLengthIncludingAddNew = getDataLengthIncludingAddNew();
-      while (++row < dataLengthIncludingAddNew) {
+      var dataLength = getDataLength();
+      while (++row < dataLength) {
         firstFocusableCell = findFirstFocusableCell(row);
         if (firstFocusableCell !== null) {
           return {
@@ -2624,7 +2578,7 @@ if (typeof Slick === "undefined") {
 
     function gotoPrev(row, cell, posX) {
       if (row == null && cell == null) {
-        row = getDataLengthIncludingAddNew() - 1;
+        row = getDataLength() - 1;
         cell = posX = columns.length - 1;
         if (canCellBeActive(row, cell)) {
           return {
@@ -2719,8 +2673,7 @@ if (typeof Slick === "undefined") {
       var stepFn = stepFunctions[dir];
       var pos = stepFn(activeRow, activeCell, activePosX);
       if (pos) {
-        var isAddNewRow = (pos.row == getDataLength());
-        scrollCellIntoView(pos.row, pos.cell, !isAddNewRow);
+        scrollCellIntoView(pos.row, pos.cell);
         setActiveCellInternal(getCellNode(pos.row, pos.cell));
         activePosX = pos.posX;
         return true;
@@ -2748,13 +2701,12 @@ if (typeof Slick === "undefined") {
         return;
       }
 
-      scrollCellIntoView(row, cell, false);
-      setActiveCellInternal(getCellNode(row, cell), false);
+      scrollCellIntoView(row, cell);
+      setActiveCellInternal(getCellNode(row, cell));
     }
 
     function canCellBeActive(row, cell) {
-      if (!options.enableCellNavigation || row >= getDataLengthIncludingAddNew() ||
-          row < 0 || cell >= columns.length || cell < 0) {
+      if (row >= getDataLength() || row < 0 || cell >= columns.length || cell < 0) {
         return false;
       }
 
@@ -2792,18 +2744,17 @@ if (typeof Slick === "undefined") {
       return columns[cell].selectable;
     }
 
-    function gotoCell(row, cell, forceEdit) {
+    function gotoCell(row, cell) {
       if (!initialized) { return; }
       if (!canCellBeActive(row, cell)) {
         return;
       }
 
-      scrollCellIntoView(row, cell, false);
+      scrollCellIntoView(row, cell);
 
       var newCell = getCellNode(row, cell);
 
-      // if selecting the 'add new' row, start editing right away
-      setActiveCellInternal(newCell, forceEdit || (row === getDataLength()) || options.autoEdit);
+      setActiveCellInternal(newCell);
 
       setFocus();
     }
@@ -2830,31 +2781,6 @@ if (typeof Slick === "undefined") {
       }
       selectionModel.setSelectedRanges(rowsToRanges(rows));
     }
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    // Debug
-
-    this.debug = function () {
-      var s = "";
-
-      s += ("\n" + "counter_rows_rendered:  " + counter_rows_rendered);
-      s += ("\n" + "counter_rows_removed:  " + counter_rows_removed);
-      s += ("\n" + "renderedRows:  " + renderedRows);
-      s += ("\n" + "numVisibleRows:  " + numVisibleRows);
-      s += ("\n" + "maxSupportedCssHeight:  " + maxSupportedCssHeight);
-      s += ("\n" + "n(umber of pages):  " + n);
-      s += ("\n" + "(current) page:  " + page);
-      s += ("\n" + "page height (ph):  " + ph);
-      s += ("\n" + "vScrollDir:  " + vScrollDir);
-
-      alert(s);
-    };
-
-    // a debug helper to be able to access private members
-    this.eval = function (expr) {
-      return eval(expr);
-    };
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -2883,7 +2809,6 @@ if (typeof Slick === "undefined") {
       "onColumnsReordered": new Slick.Event(),
       "onColumnsResized": new Slick.Event(),
       "onCellChange": new Slick.Event(),
-      "onBeforeEditCell": new Slick.Event(),
       "onBeforeDestroy": new Slick.Event(),
       "onActiveCellChanged": new Slick.Event(),
       "onActiveCellPositionChanged": new Slick.Event(),
