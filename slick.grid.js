@@ -57,6 +57,7 @@ if (typeof Slick === "undefined") {
       explicitInitialization: false,
       rowHeight: 25,
       defaultColumnWidth: 80,
+      enableRowNavigation: true,
       enableCellNavigation: true,
       enableColumnReorder: true,
       forceFitColumns: false,
@@ -2067,9 +2068,14 @@ if (typeof Slick === "undefined") {
         return;
       }
 
-      if ((activeCell != cell.cell || activeRow != cell.row) && canCellBeActive(cell.row, cell.cell)) {
-        scrollRowIntoView(cell.row);
-        setActiveCellInternal(getCellNode(cell.row, cell.cell));
+      if (options.enableRowNavigation) {
+        if (options.enableCellNavigation && (activeCell != cell.cell || activeRow != cell.row) && canCellBeActive(cell.row, cell.cell)) {
+          scrollRowIntoView(cell.row);
+          setActiveCellInternal(getCellNode(cell.row, cell.cell));
+        } else if (activeRow != cell.row && canCellBeActive(cell.row, cell.cell)) {
+          scrollRowIntoView(cell.row);
+          setActiveCellInternal(getCellNode(cell.row, cell.cell));
+        }
       }
     }
 
@@ -2257,7 +2263,9 @@ if (typeof Slick === "undefined") {
         activeRow = getRowFromNode(activeCellNode.parentNode);
         activeCell = activePosX = getCellFromNode(activeCellNode);
 
-        $(activeCellNode).addClass("active");
+        if (options.enableRowNavigation && options.enableCellNavigation) {
+          $(activeCellNode).addClass("active");
+        }
         $(rowsCache[activeRow].rowNode).addClass("active");
       } else {
         activeRow = activeCell = null;
@@ -2375,7 +2383,7 @@ if (typeof Slick === "undefined") {
       scrollTo((getRowFromPosition(scrollTop) + deltaRows) * options.rowHeight);
       render();
 
-      if (options.enableCellNavigation && activeRow != null) {
+      if (options.enableRowNavigation && activeRow != null) {
         var row = activeRow + deltaRows;
         var dataLength = getDataLength();
         if (row >= dataLength) {
@@ -2642,12 +2650,16 @@ if (typeof Slick === "undefined") {
      * @return {boolean} Whether navigation resulted in a change of active cell.
      */
     function navigate(dir) {
-      if (!options.enableCellNavigation) {
+      if (!options.enableRowNavigation) {
         return false;
       }
 
       if (!activeCellNode && dir != "prev" && dir != "next") {
         return false;
+      }
+
+      if (!options.enableCellNavigation && (dir == "left" || dir == "right")) {
+        return;
       }
 
       setFocus();
@@ -2667,8 +2679,8 @@ if (typeof Slick === "undefined") {
         "down": gotoDown,
         "left": gotoLeft,
         "right": gotoRight,
-        "prev": gotoPrev,
-        "next": gotoNext
+        "prev": options.enableCellNavigation ? gotoPrev : gotoUp,
+        "next": options.enableCellNavigation ? gotoNext : gotoDown
       };
       var stepFn = stepFunctions[dir];
       var pos = stepFn(activeRow, activeCell, activePosX);
@@ -2697,7 +2709,7 @@ if (typeof Slick === "undefined") {
         return;
       }
 
-      if (!options.enableCellNavigation) {
+      if (!options.enableRowNavigation) {
         return;
       }
 
