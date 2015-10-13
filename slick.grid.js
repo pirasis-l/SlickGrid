@@ -71,7 +71,6 @@ if (typeof Slick === "undefined") {
       cellFlashingCssClass: "flashing",
       selectedCellCssClass: "selected",
       multiSelect: true,
-      enableTextSelectionOnCells: false,
       dataItemColumnValueExtractor: null,
       fullWidthRows: false,
       enableThreeStepsSorting: false,
@@ -243,21 +242,6 @@ if (typeof Slick === "undefined") {
         // calculate the diff so we can set consistent sizes
         measureCellPaddingAndBorder();
 
-        // for usability reasons, all text selection in SlickGrid is disabled
-        // with the exception of input and textarea elements (selection must
-        // be enabled there so that editors work as expected); note that
-        // selection in grid cells (grid body) is already unavailable in
-        // all browsers except IE
-        disableSelection($headers); // disable all text selection in header (including input and textarea)
-
-        if (!options.enableTextSelectionOnCells) {
-          // disable text selection in grid cells except in input and textarea elements
-          // (this is IE-specific, because selectstart event will only fire in IE)
-          $viewport.bind("selectstart.ui", function (event) {
-            return $(event.target).is("input,textarea");
-          });
-        }
-
         updateColumnCaches();
         createColumnHeaders();
         setupColumnSort();
@@ -379,17 +363,6 @@ if (typeof Slick === "undefined") {
 
       if (canvasWidth != oldCanvasWidth || forceColumnWidthsUpdate) {
         applyColumnWidths();
-      }
-    }
-
-    function disableSelection($target) {
-      if ($target && $target.jquery) {
-        $target
-            .attr("unselectable", "on")
-            .css("MozUserSelect", "none")
-            .bind("selectstart.ui", function () {
-              return false;
-            }); // from jquery:ui.core.js 1.7.2
       }
     }
 
