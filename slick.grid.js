@@ -328,7 +328,7 @@ if (typeof Slick === "undefined") {
         headersWidth += width;
       }
       headersWidth += scrollbarDimensions.width;
-      return Math.max(headersWidth, viewportW) + 1000;
+      return Math.max(headersWidth, viewportW) + 1200;
     }
 
     function getCanvasWidth() {
@@ -456,6 +456,7 @@ if (typeof Slick === "undefined") {
           header.appendTo(g.container);
           g.width += m.width - headerColumnWidthDiff + 10;
           g.el.width(g.width - g.childrenCount);
+          g.container.width(g.width + 400);
         } else {
           header.appendTo($headers);
         }
@@ -827,6 +828,8 @@ if (typeof Slick === "undefined") {
       var rowHeight = (options.rowHeight - cellHeightDiff);
       var rules = [
         "." + uid + " .slick-header-column { left: 1000px; }",
+        "." + uid + " .slick-header-group-container { position: relative; left: -200px; }",
+        "." + uid + " .slick-header-group-container .slick-header-column { left: 200px; }",
         "." + uid + " .slick-cell { height:" + rowHeight + "px; }",
         "." + uid + " .slick-row { height:" + options.rowHeight + "px; }"
       ];
