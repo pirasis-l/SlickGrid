@@ -1,0 +1,7 @@
+{
+  "preset": "idiomatic",
+  "disallowMultipleVarDecl": null,
+  "maximumLineLength": null,
+  "validateQuoteMarks": "'",
+  "validateIndentation": 2
+}
