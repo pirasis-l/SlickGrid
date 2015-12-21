@@ -1,7 +1,10 @@
 {
   "name": "SlickGrid",
   "ignore": [
+    ".*",
+    "Gruntfile.js",
     "MIT-LICENSE.txt",
+    "package.json",
     "README.md"
   ],
   "main": [
