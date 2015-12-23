@@ -1083,11 +1083,11 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function getDataItem( i ) {
-      if ( data.getItem ) {
-        return data.getItem( i );
-      } else {
-        return data[ i ];
-      }
+      return data.getItem( i );
+    }
+
+    function getDataItemId( i ) {
+      return getDataItem( i ).id;
     }
 
     function getContainerNode() {
@@ -1223,13 +1223,14 @@ if ( typeof Slick === 'undefined' ) {
 
       stringArray.push( '</div>' );
 
-      rowsCache[ row ].cellRenderQueue.push( cell );
+      rowsCache[ getDataItemId( row ) ].cellRenderQueue.push( cell );
     }
 
     function cleanupRows( rangeToKeep ) {
-      for ( var i in rowsCache ) {
-        if ( ((i = parseInt( i, 10 )) !== activeRow) && (i < rangeToKeep.top || i > rangeToKeep.bottom) ) {
-          removeRowFromCache( i );
+      for ( var id in rowsCache ) {
+        var row = data.getIdxById( id );
+        if ( row !== activeRow && (row < rangeToKeep.top || row > rangeToKeep.bottom) ) {
+          removeRowFromCache( id );
         }
       }
     }
@@ -1241,13 +1242,13 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function invalidateAllRows() {
-      for ( var row in rowsCache ) {
-        removeRowFromCache( row );
+      for ( var id in rowsCache ) {
+        removeRowFromCache( id );
       }
     }
 
-    function removeRowFromCache( row ) {
-      var cacheEntry = rowsCache[ row ];
+    function removeRowFromCache( id ) {
+      var cacheEntry = rowsCache[ id ];
       if ( !cacheEntry ) {
         return;
       }
@@ -1259,7 +1260,7 @@ if ( typeof Slick === 'undefined' ) {
         $canvas[ 0 ].removeChild( cacheEntry.rowNode );
       }
 
-      delete rowsCache[ row ];
+      delete rowsCache[ id ];
     }
 
     function invalidateRows( rows ) {
@@ -1269,8 +1270,9 @@ if ( typeof Slick === 'undefined' ) {
       }
       vScrollDir = 0;
       for ( i = 0, rl = rows.length; i < rl; i++ ) {
-        if ( rowsCache[ rows[ i ] ] ) {
-          removeRowFromCache( rows[ i ] );
+        var rowId = getDataItemId( rows[ i ] );
+        if ( rowsCache[ rowId ] ) {
+          removeRowFromCache( rowId );
         }
       }
     }
@@ -1290,7 +1292,8 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function updateRow( row ) {
-      var cacheEntry = rowsCache[ row ];
+      var rowId = getDataItemId( row );
+      var cacheEntry = rowsCache[ rowId ];
       if ( !cacheEntry ) {
         return;
       }
@@ -1350,9 +1353,10 @@ if ( typeof Slick === 'undefined' ) {
       // remove the rows that are now outside of the data range
       // this helps avoid redundant calls to .removeRow() when the size of the data decreased by thousands of rows
       var l = numberOfRows - 1;
-      for ( var i in rowsCache ) {
-        if ( i >= l ) {
-          removeRowFromCache( i );
+      for ( var id in rowsCache ) {
+        var row = data.getIdxById( id );
+        if ( row >= l ) {
+          removeRowFromCache( id );
         }
       }
 
@@ -1443,7 +1447,7 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function ensureCellNodesInRowsCache( row ) {
-      var cacheEntry = rowsCache[ row ];
+      var cacheEntry = rowsCache[ getDataItemId( row ) ];
       if ( cacheEntry ) {
         if ( cacheEntry.cellRenderQueue.length ) {
           var lastChild = cacheEntry.rowNode.lastChild;
@@ -1458,7 +1462,7 @@ if ( typeof Slick === 'undefined' ) {
 
     function cleanUpCells( range, row ) {
       var totalCellsRemoved = 0;
-      var cacheEntry = rowsCache[ row ];
+      var cacheEntry = rowsCache[ getDataItemId( row ) ];
 
       // Remove cells outside the range.
       var cellsToRemove = [];
@@ -1495,7 +1499,7 @@ if ( typeof Slick === 'undefined' ) {
       var totalCellsAdded = 0;
 
       for ( var row = range.top, btm = range.bottom; row <= btm; row++ ) {
-        cacheEntry = rowsCache[ row ];
+        cacheEntry = rowsCache[ getDataItemId( row ) ];
         if ( !cacheEntry ) {
           continue;
         }
@@ -1544,7 +1548,7 @@ if ( typeof Slick === 'undefined' ) {
       var processedRow;
       var node;
       while ( (processedRow = processedRows.pop()) != null ) {
-        cacheEntry = rowsCache[ processedRow ];
+        cacheEntry = rowsCache[ getDataItemId( processedRow ) ];
         var columnIdx;
         while ( (columnIdx = cacheEntry.cellRenderQueue.pop()) != null ) {
           node = x.lastChild;
@@ -1563,12 +1567,13 @@ if ( typeof Slick === 'undefined' ) {
           dataLength = getDataLength();
 
       for ( i = range.top, ii = range.bottom; i <= ii; i++ ) {
-        if ( rowsCache[ i ] ) {
+        var id = getDataItemId( i );
+        if ( rowsCache[ id ] ) {
           continue;
         }
         rows.push( i );
 
-        rowsCache[ i ] = {
+        rowsCache[ id ] = {
           rowNode: null,
           cellNodesByColumnIdx: [],
           cellRenderQueue: []
@@ -1586,7 +1591,7 @@ if ( typeof Slick === 'undefined' ) {
       x.innerHTML = stringArray.join( '' );
 
       for ( i = 0, ii = rows.length; i < ii; i++ ) {
-        rowsCache[ rows[ i ] ].rowNode = parentNode.appendChild( x.firstChild );
+        rowsCache[ getDataItemId( rows[ i ] ) ].rowNode = parentNode.appendChild( x.firstChild );
       }
 
       if ( needToReselectCell ) {
@@ -1595,8 +1600,8 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function updateRowPositions() {
-      for ( var row in rowsCache ) {
-        rowsCache[ row ].rowNode.style.top = getRowTop( row ) + 'px';
+      for ( var rowId in rowsCache ) {
+        rowsCache[ rowId ].rowNode.style.top = getRowTop( data.getIdxById( rowId ) ) + 'px';
       }
     }
 
@@ -1842,9 +1847,9 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function getRowFromNode( rowNode ) {
-      for ( var row in rowsCache ) {
-        if ( rowsCache[ row ].rowNode === rowNode ) {
-          return row | 0;
+      for ( var rowId in rowsCache ) {
+        if ( rowsCache[ rowId ].rowNode === rowNode ) {
+          return data.getIdxById( rowId );
         }
       }
 
@@ -1926,8 +1931,9 @@ if ( typeof Slick === 'undefined' ) {
     function setActiveCellInternal( newCell ) {
       if ( activeCellNode !== null ) {
         $( activeCellNode ).removeClass( 'active' );
-        if ( rowsCache[ activeRow ] ) {
-          $( rowsCache[ activeRow ].rowNode ).removeClass( 'active' );
+        var activeRowId = getDataItemId( activeRow );
+        if ( rowsCache[ activeRowId ] ) {
+          $( rowsCache[ activeRowId ].rowNode ).removeClass( 'active' );
         }
       }
 
@@ -1941,7 +1947,7 @@ if ( typeof Slick === 'undefined' ) {
         if ( options.enableRowNavigation && options.enableCellNavigation ) {
           $( activeCellNode ).addClass( 'active' );
         }
-        $( rowsCache[ activeRow ].rowNode ).addClass( 'active' );
+        $( rowsCache[ getDataItemId( activeRow ) ].rowNode ).addClass( 'active' );
       } else {
         activeRow = activeCell = null;
       }
@@ -2341,16 +2347,18 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function getRowNode( row ) {
-      if ( rowsCache[ row ] ) {
-        return rowsCache[ row ].rowNode;
+      var cacheEntry = rowsCache[ getDataItemId( row ) ];
+      if ( cacheEntry ) {
+        return cacheEntry.rowNode;
       }
       return null;
     }
 
     function getCellNode( row, cell ) {
-      if ( rowsCache[ row ] ) {
+      var rowId = getDataItemId( row );
+      if ( rowsCache[ rowId ] ) {
         ensureCellNodesInRowsCache( row );
-        return rowsCache[ row ].cellNodesByColumnIdx[ cell ];
+        return rowsCache[ rowId ].cellNodesByColumnIdx[ cell ];
       }
       return null;
     }
