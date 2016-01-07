@@ -1765,12 +1765,12 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function handleContextMenu( e ) {
-      var $cell = $( e.target ).closest( '.slick-cell', $canvas );
-      if ( $cell.length === 0 ) {
+      var cell = getCellFromEvent( e );
+      if ( !cell ) {
         return;
       }
 
-      trigger( self.onContextMenu, {}, e );
+      trigger( self.onContextMenu, { row: cell.row, cell: cell.cell }, e );
     }
 
     function handleDblClick( e ) {
