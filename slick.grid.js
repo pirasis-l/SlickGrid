@@ -1131,9 +1131,12 @@ if ( typeof Slick === 'undefined' ) {
     function defaultFormatter( row, cell, value ) {
       if ( value == null ) {
         return '';
-      } else {
-        return (value + '').replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
       }
+
+      return (value + '')
+        .replace( /&/g, '&amp;' )
+        .replace( /</g, '&lt;' )
+        .replace( />/g, '&gt;' );
     }
 
     function getFormatter( row, column ) {
@@ -1867,12 +1870,8 @@ if ( typeof Slick === 'undefined' ) {
 
       if ( row == null || cell == null ) {
         return null;
-      } else {
-        return {
-          'row': row,
-          'cell': cell
-        };
       }
+      return { row: row, cell: cell };
     }
 
     function getCellNodeBox( row, cell ) {
@@ -2015,9 +2014,9 @@ if ( typeof Slick === 'undefined' ) {
     function getActiveCell() {
       if ( !activeCellNode ) {
         return null;
-      } else {
-        return { row: activeRow, cell: activeCell };
       }
+
+      return { row: activeRow, cell: activeCell };
     }
 
     function getActiveCellNode() {
@@ -2340,10 +2339,10 @@ if ( typeof Slick === 'undefined' ) {
         setActiveCellInternal( getCellNode( pos.row, pos.cell ) );
         activePosX = pos.posX;
         return true;
-      } else {
-        setActiveCellInternal( getCellNode( activeRow, activeCell ) );
-        return false;
       }
+
+      setActiveCellInternal( getCellNode( activeRow, activeCell ) );
+      return false;
     }
 
     function getRowNode( row ) {
