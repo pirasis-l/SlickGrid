@@ -1087,7 +1087,8 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function getDataItemId( i ) {
-      return getDataItem( i ).id;
+      var data = getDataItem( i );
+      return data && data.id;
     }
 
     function getContainerNode() {
