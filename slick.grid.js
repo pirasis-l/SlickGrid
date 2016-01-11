@@ -586,7 +586,7 @@ if ( typeof Slick === 'undefined' ) {
               for ( j = i + 1; j < columnElements.length; j++ ) {
                 c = columns[ j ];
                 if ( c.resizable ) {
-                  if ( stretchLeewayOnRight !== null ) {
+                  if ( stretchLeewayOnRight != null ) {
                     if ( c.maxWidth ) {
                       stretchLeewayOnRight += c.maxWidth - c.previousWidth;
                     } else {
@@ -602,7 +602,7 @@ if ( typeof Slick === 'undefined' ) {
               // columns on left only affect minPageX
               c = columns[ j ];
               if ( c.resizable ) {
-                if ( stretchLeewayOnLeft !== null ) {
+                if ( stretchLeewayOnLeft != null ) {
                   if ( c.maxWidth ) {
                     stretchLeewayOnLeft += c.maxWidth - c.previousWidth;
                   } else {
@@ -1929,7 +1929,7 @@ if ( typeof Slick === 'undefined' ) {
     }
 
     function setActiveCellInternal( newCell ) {
-      if ( activeCellNode !== null ) {
+      if ( activeCellNode != null ) {
         $( activeCellNode ).removeClass( 'active' );
         var activeRowId = getDataItemId( activeRow );
         if ( rowsCache[ activeRowId ] ) {
@@ -2069,7 +2069,7 @@ if ( typeof Slick === 'undefined' ) {
           cell += 1;
         }
 
-        if ( prevCell !== null ) {
+        if ( prevCell != null ) {
           setActiveCellInternal( getCellNode( row, prevCell ) );
           activePosX = prevActivePosX;
         } else {
@@ -2224,7 +2224,7 @@ if ( typeof Slick === 'undefined' ) {
       var dataLength = getDataLength();
       while ( ++row < dataLength ) {
         firstFocusableCell = findFirstFocusableCell( row );
-        if ( firstFocusableCell !== null ) {
+        if ( firstFocusableCell != null ) {
           return {
             'row': row,
             'cell': firstFocusableCell,
@@ -2261,7 +2261,7 @@ if ( typeof Slick === 'undefined' ) {
 
         cell = 0;
         lastSelectableCell = findLastFocusableCell( row );
-        if ( lastSelectableCell !== null ) {
+        if ( lastSelectableCell != null ) {
           pos = {
             'row': row,
             'cell': lastSelectableCell,
