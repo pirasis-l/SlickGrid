@@ -309,6 +309,7 @@
       'sort': sort,
       'reSort': reSort,
       'getIdxById': getIdxById,
+      'updateIdxById': updateIdxById,
       'getRowById': getRowById,
       'getItemById': getItemById,
       'getItemByIdx': getItemByIdx,
