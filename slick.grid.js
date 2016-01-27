@@ -164,7 +164,7 @@ if ( typeof Slick === 'undefined' ) {
         .css( 'overflow', 'hidden' )
         .css( 'outline', 0 )
         .addClass( uid )
-        .addClass( 'ui-widget' );
+        .addClass( 'ui-widget narrow' );
 
       // set up a positioning container if needed
       if ( !/relative|absolute|fixed/.test( $container.css( 'position' ) ) ) {
@@ -404,7 +404,7 @@ if ( typeof Slick === 'undefined' ) {
           var g = $headerGroups[ groupId ];
           g.childrenCount++;
           header.appendTo( g.container );
-          g.width += m.width - headerColumnWidthDiff + 10;
+          g.width += m.width - headerColumnWidthDiff + 8;
           g.el.width( g.width - g.childrenCount );
           g.container.width( g.width + 400 );
         } else {
