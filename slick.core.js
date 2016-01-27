@@ -1,4 +1,4 @@
-(function( $ ) {
+(function($) {
   'use strict';
 
   function EventData() {
@@ -25,25 +25,25 @@
   function Event() {
     var handlers = [];
 
-    this.subscribe = function( fn ) {
-      handlers.push( fn );
+    this.subscribe = function(fn) {
+      handlers.push(fn);
     };
 
-    this.unsubscribe = function( fn ) {
-      for ( var i = handlers.length - 1; i >= 0; i-- ) {
-        if ( handlers[ i ] === fn ) {
-          handlers.splice( i, 1 );
+    this.unsubscribe = function(fn) {
+      for (var i = handlers.length - 1; i >= 0; i--) {
+        if (handlers[i] === fn) {
+          handlers.splice(i, 1);
         }
       }
     };
 
-    this.notify = function( args, e, scope ) {
+    this.notify = function(args, e, scope) {
       e = e || new EventData();
       scope = scope || this;
 
       var returnValue;
-      for ( var i = 0; i < handlers.length && !(e.isPropagationStopped() || e.isImmediatePropagationStopped()); i++ ) {
-        returnValue = handlers[ i ].call( scope, e, args );
+      for (var i = 0; i < handlers.length && !(e.isPropagationStopped() || e.isImmediatePropagationStopped()); i++) {
+        returnValue = handlers[i].call(scope, e, args);
       }
 
       return returnValue;
@@ -53,24 +53,24 @@
   function EventHandler() {
     var handlers = [];
 
-    this.subscribe = function( event, handler ) {
+    this.subscribe = function(event, handler) {
       handlers.push({
         event: event,
-        handler: handler
+        handler: handler,
       });
-      event.subscribe( handler );
+      event.subscribe(handler);
 
       // allow chaining
       return this;
     };
 
-    this.unsubscribe = function( event, handler ) {
+    this.unsubscribe = function(event, handler) {
       var i = handlers.length;
-      while ( i-- ) {
-        if ( handlers[ i ].event === event &&
-            handlers[ i ].handler === handler ) {
-          handlers.splice( i, 1 );
-          event.unsubscribe( handler );
+      while (i--) {
+        if (handlers[i].event === event &&
+            handlers[i].handler === handler) {
+          handlers.splice(i, 1);
+          event.unsubscribe(handler);
           return;
         }
       }
@@ -81,9 +81,10 @@
 
     this.unsubscribeAll = function() {
       var i = handlers.length;
-      while ( i-- ) {
-        handlers[ i ].event.unsubscribe( handlers[ i ].handler );
+      while (i--) {
+        handlers[i].event.unsubscribe(handlers[i].handler);
       }
+
       handlers = [];
 
       // allow chaining
@@ -91,16 +92,16 @@
     };
   }
 
-  function Range( fromRow, fromCell, toRow, toCell ) {
-    if ( toRow === undefined && toCell === undefined ) {
+  function Range(fromRow, fromCell, toRow, toCell) {
+    if (toRow === undefined && toCell === undefined) {
       toRow = fromRow;
       toCell = fromCell;
     }
 
-    this.fromRow = Math.min( fromRow, toRow );
-    this.fromCell = Math.min( fromCell, toCell );
-    this.toRow = Math.max( fromRow, toRow );
-    this.toCell = Math.max( fromCell, toCell );
+    this.fromRow = Math.min(fromRow, toRow);
+    this.fromCell = Math.min(fromCell, toCell);
+    this.toRow = Math.max(fromRow, toRow);
+    this.toCell = Math.max(fromCell, toCell);
 
     this.isSingleRow = function() {
       return this.fromRow === this.toRow;
@@ -110,13 +111,13 @@
       return this.fromRow === this.toRow && this.fromCell === this.toCell;
     };
 
-    this.contains = function( row, cell ) {
+    this.contains = function(row, cell) {
       return row >= this.fromRow && row <= this.toRow &&
           cell >= this.fromCell && cell <= this.toCell;
     };
 
     this.toString = function() {
-      if ( this.isSingleCell() ) {
+      if (this.isSingleCell()) {
         return '(' + this.fromRow + ':' + this.fromCell + ')';
       } else {
         return '(' + this.fromRow + ':' + this.fromCell + ' - ' + this.toRow + ':' + this.toCell + ')';
@@ -143,7 +144,7 @@
 
   Group.prototype = new NonDataItem();
 
-  Group.prototype.equals = function( group ) {
+  Group.prototype.equals = function(group) {
     return this.value === group.value &&
         this.count === group.count &&
         this.collapsed === group.collapsed &&
@@ -161,31 +162,36 @@
   function EditorLock() {
     var activeEditController = null;
 
-    this.isActive = function( editController ) {
+    this.isActive = function(editController) {
       return (editController ? activeEditController === editController : activeEditController !== null);
     };
 
-    this.activate = function( editController ) {
+    this.activate = function(editController) {
       // already activated?
-      if ( editController === activeEditController ) {
+      if (editController === activeEditController) {
         return;
       }
-      if ( activeEditController !== null ) {
+
+      if (activeEditController !== null) {
         throw 'SlickGrid.EditorLock.activate: an editController is still active, can\'t activate another editController';
       }
-      if ( !editController.commitCurrentEdit ) {
+
+      if (!editController.commitCurrentEdit) {
         throw 'SlickGrid.EditorLock.activate: editController must implement .commitCurrentEdit()';
       }
-      if ( !editController.cancelCurrentEdit ) {
+
+      if (!editController.cancelCurrentEdit) {
         throw 'SlickGrid.EditorLock.activate: editController must implement .cancelCurrentEdit()';
       }
+
       activeEditController = editController;
     };
 
-    this.deactivate = function( editController ) {
-      if ( activeEditController !== editController ) {
+    this.deactivate = function(editController) {
+      if (activeEditController !== editController) {
         throw 'SlickGrid.EditorLock.deactivate: specified editController is not the currently active one';
       }
+
       activeEditController = null;
     };
 
@@ -199,35 +205,35 @@
   }
 
   // register namespace
-  $.extend( true, window, {
-    'Slick': {
-      'Event': Event,
-      'EventData': EventData,
-      'EventHandler': EventHandler,
-      'Range': Range,
-      'NonDataRow': NonDataItem,
-      'Group': Group,
-      'GroupTotals': GroupTotals,
-      'EditorLock': EditorLock,
+  $.extend(true, window, {
+    Slick: {
+      Event: Event,
+      EventData: EventData,
+      EventHandler: EventHandler,
+      Range: Range,
+      NonDataRow: NonDataItem,
+      Group: Group,
+      GroupTotals: GroupTotals,
+      EditorLock: EditorLock,
 
-      'GlobalEditorLock': new EditorLock(),
+      GlobalEditorLock: new EditorLock(),
 
-      'keyCode': {
-        'BACKSPACE': 8,
-        'TAB': 9,
-        'ENTER': 13,
-        'ESCAPE': 27,
-        'PAGE_UP': 33,
-        'PAGE_DOWN': 34,
-        'END': 35,
-        'HOME': 36,
-        'LEFT': 37,
-        'UP': 38,
-        'RIGHT': 39,
-        'DOWN': 40,
-        'INSERT': 45,
-        'DELETE': 46
-      }
-    }
+      keyCode: {
+        BACKSPACE: 8,
+        TAB: 9,
+        ENTER: 13,
+        ESCAPE: 27,
+        PAGE_UP: 33,
+        PAGE_DOWN: 34,
+        END: 35,
+        HOME: 36,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40,
+        INSERT: 45,
+        DELETE: 46,
+      },
+    },
   });
-})( jQuery );
+})(jQuery);

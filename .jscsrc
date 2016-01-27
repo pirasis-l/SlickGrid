@@ -1,6 +1,3 @@
 {
-  "preset": "idiomatic",
-  "maximumLineLength": null,
-  "validateQuoteMarks": "'",
-  "validateIndentation": 2
+  "preset": "airbnb"
 }

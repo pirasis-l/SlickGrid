@@ -1,34 +1,30 @@
 'use strict';
 
-module.exports = function( grunt ) {
-  require( 'load-grunt-tasks' )( grunt );
-  require( 'time-grunt' )( grunt );
+module.exports = function(grunt) {
+  require('load-grunt-tasks')(grunt);
+  require('time-grunt')(grunt);
 
   grunt.initConfig({
     jshint: {
       prod: {
         options: {
-          jshintrc: true
+          jshintrc: true,
         },
         files: {
-          src: [
-            '*.js'
-          ]
-        }
-      }
+          src: ['*.js'],
+        },
+      },
     },
 
     jscs: {
       prod: {
         options: {
-          config: '.jscsrc'
+          config: '.jscsrc',
         },
         files: {
-          src: [
-            '*.js'
-          ]
-        }
-      }
-    }
+          src: ['*.js'],
+        },
+      },
+    },
   });
 };
