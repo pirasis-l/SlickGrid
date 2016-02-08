@@ -1,0 +1,15 @@
+extends: airbnb/legacy
+rules:
+  eqeqeq: [2, smart]
+  func-names: 0
+  guard-for-in: 0
+  no-cond-assign: 0
+  no-constant-condition: 0
+  no-param-reassign: 0
+  no-shadow: 0
+  no-use-before-define: 0
+  max-len: 0
+  vars-on-top: 0
+globals:
+  Slick: true
+  jQuery: false

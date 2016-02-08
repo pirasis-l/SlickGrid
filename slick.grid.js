@@ -18,26 +18,19 @@
 
 // make sure required JavaScript modules are loaded
 if (typeof jQuery === 'undefined') {
-  throw 'SlickGrid requires jquery module to be loaded';
+  throw new Error('SlickGrid requires jquery module to be loaded');
 }
 
 if (!jQuery.fn.drag) {
-  throw 'SlickGrid requires jquery.event.drag module to be loaded';
+  throw new Error('SlickGrid requires jquery.event.drag module to be loaded');
 }
 
 if (typeof Slick === 'undefined') {
-  throw 'slick.core.js not loaded';
+  throw new Error('slick.core.js not loaded');
 }
 
-(function($) {
+(function ($) {
   'use strict';
-
-  // Slick.Grid
-  $.extend(true, window, {
-    Slick: {
-      Grid: SlickGrid,
-    },
-  });
 
   var scrollbarDimensions;
 
@@ -381,7 +374,7 @@ if (typeof Slick === 'undefined') {
 
     function createColumnHeaders() {
       $headers.find('.slick-header-column')
-        .each(function() {
+        .each(function () {
           var columnDef = $(this).data('column');
           if (columnDef) {
             trigger(_this.onBeforeHeaderCellDestroy, {
@@ -452,7 +445,7 @@ if (typeof Slick === 'undefined') {
     }
 
     function setupColumnSort() {
-      $headers.click(function(e) {
+      $headers.click(function (e) {
         // temporary workaround for a bug in jQuery 1.7.1 (http://bugs.jquery.com/ticket/11328)
         e.metaKey = e.metaKey || e.ctrlKey;
 
@@ -507,13 +500,14 @@ if (typeof Slick === 'undefined') {
             trigger(_this.onSort, {
               multiColumnSort: false,
               sortCol: column,
-              sortAsc: sortOpts.sortAsc, }, e);
+              sortAsc: sortOpts.sortAsc,
+            }, e);
           } else {
             trigger(_this.onSort, {
               multiColumnSort: true,
-              sortCols: $.map(sortColumns, function(col) {
+              sortCols: $.map(sortColumns, function (col) {
                 return { sortCol: columns[getColumnIndex(col.columnId)], sortAsc: col.sortAsc };
-              }), }, e);
+              }) }, e);
           }
         }
       });
@@ -521,7 +515,7 @@ if (typeof Slick === 'undefined') {
 
     function setupColumnReorder() {
       var sortableHeaders = [$headers].concat($headers.children('.slick-header-column-group').children('.slick-header-group-container'));
-      $.each(sortableHeaders, function(i, headers) {
+      $.each(sortableHeaders, function (i, headers) {
         $(headers).filter(':ui-sortable').sortable('destroy');
         $(headers).sortable({
           containment: 'parent',
@@ -531,16 +525,16 @@ if (typeof Slick === 'undefined') {
           tolerance: 'intersection',
           helper: 'clone',
           placeholder: 'slick-sortable-placeholder ui-state-default slick-header-column',
-          start: function(e, ui) {
+          start: function (e, ui) {
             ui.placeholder.width(ui.helper.outerWidth() - headerColumnWidthDiff);
             $(ui.helper).addClass('slick-header-column-active');
           },
 
-          beforeStop: function(e, ui) {
+          beforeStop: function (e, ui) {
             $(ui.helper).removeClass('slick-header-column-active');
           },
 
-          stop: function(e) {
+          stop: function (e) {
             var i;
             var j;
             var column;
@@ -576,7 +570,6 @@ if (typeof Slick === 'undefined') {
                   reorderedColumns.push(columns[getColumnIndex(columnId)]);
                 }
               }
-
             }
 
             setColumns(reorderedColumns, columnGroups);
@@ -590,7 +583,6 @@ if (typeof Slick === 'undefined') {
     }
 
     function setupColumnResize() {
-      var $col;
       var j;
       var c;
       var pageX;
@@ -602,7 +594,7 @@ if (typeof Slick === 'undefined') {
 
       columnElements = $headers.find('.slick-header-column');
       columnElements.find('.slick-resizable-handle').remove();
-      columnElements.each(function(i) {
+      columnElements.each(function (i) {
         if (columns[i].resizable) {
           if (firstResizable === undefined) {
             firstResizable = i;
@@ -616,22 +608,21 @@ if (typeof Slick === 'undefined') {
         return;
       }
 
-      columnElements.each(function(i, e) {
+      columnElements.each(function (i, e) {
         if (i < firstResizable || (options.forceFitColumns && i >= lastResizable)) {
           return;
         }
 
-        $col = $(e);
         $('<div class="slick-resizable-handle"/>')
           .appendTo(e)
-          .bind('dragstart', function(e) {
+          .bind('dragstart', function (e) {
             pageX = e.pageX;
             $(this).parent().addClass('slick-header-column-active');
             var shrinkLeewayOnRight = null;
             var stretchLeewayOnRight = null;
 
             // lock each column's width option to current width
-            columnElements.each(function(i, e) {
+            columnElements.each(function (i, e) {
               columns[i].previousWidth = $(e).outerWidth();
             });
 
@@ -693,7 +684,7 @@ if (typeof Slick === 'undefined') {
             maxPageX = pageX + Math.min(shrinkLeewayOnRight, stretchLeewayOnLeft);
             minPageX = pageX - Math.min(shrinkLeewayOnLeft, stretchLeewayOnRight);
           })
-          .bind('drag', function(e) {
+          .bind('drag', function (e) {
             var actualMinWidth;
             var d = Math.min(maxPageX, Math.max(minPageX, e.pageX)) - pageX;
             var x;
@@ -770,7 +761,7 @@ if (typeof Slick === 'undefined') {
               applyColumnWidths();
             }
           })
-          .bind('dragend', function() {
+          .bind('dragend', function () {
             var newWidth;
             $(this).parent().removeClass('slick-header-column-active');
             for (j = 0; j < columnElements.length; j++) {
@@ -792,7 +783,7 @@ if (typeof Slick === 'undefined') {
     function getVBoxDelta($el) {
       var p = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'];
       var delta = 0;
-      $.each(p, function(n, val) {
+      $.each(p, function (n, val) {
         delta += parseFloat($el.css(val)) || 0;
       });
 
@@ -807,11 +798,11 @@ if (typeof Slick === 'undefined') {
       el = $('<div class="ui-state-default slick-header-column" style="visibility:hidden">-</div>').appendTo($headers);
       headerColumnWidthDiff = headerColumnHeightDiff = 0;
       if (el.css('box-sizing') !== 'border-box' && el.css('-moz-box-sizing') !== 'border-box' && el.css('-webkit-box-sizing') !== 'border-box') {
-        $.each(h, function(n, val) {
+        $.each(h, function (n, val) {
           headerColumnWidthDiff += parseFloat(el.css(val)) || 0;
         });
 
-        $.each(v, function(n, val) {
+        $.each(v, function (n, val) {
           headerColumnHeightDiff += parseFloat(el.css(val)) || 0;
         });
       }
@@ -822,11 +813,11 @@ if (typeof Slick === 'undefined') {
       el = $('<div class="slick-cell" id="" style="visibility:hidden">-</div>').appendTo(r);
       cellWidthDiff = cellHeightDiff = 0;
       if (el.css('box-sizing') !== 'border-box' && el.css('-moz-box-sizing') !== 'border-box' && el.css('-webkit-box-sizing') !== 'border-box') {
-        $.each(h, function(n, val) {
+        $.each(h, function (n, val) {
           cellWidthDiff += parseFloat(el.css(val)) || 0;
         });
 
-        $.each(v, function(n, val) {
+        $.each(v, function (n, val) {
           cellHeightDiff += parseFloat(el.css(val)) || 0;
         });
       }
@@ -1083,7 +1074,7 @@ if (typeof Slick === 'undefined') {
           .find('.slick-sort-indicator')
               .removeClass('slick-sort-indicator-asc slick-sort-indicator-desc');
 
-      $.each(sortColumns, function(i, col) {
+      $.each(sortColumns, function (i, col) {
         if (col.sortAsc == null) {
           col.sortAsc = true;
         }
@@ -1158,7 +1149,7 @@ if (typeof Slick === 'undefined') {
 
     function setData(newData, scrollToTop) {
       if (newData.name !== 'DataView') {
-        throw 'Data should be DataView';
+        throw new Error('Data should be DataView');
       }
 
       data = newData;
@@ -1182,8 +1173,8 @@ if (typeof Slick === 'undefined') {
     }
 
     function getDataItemId(i) {
-      var data = getDataItem(i);
-      return data && data.id;
+      var dataItem = getDataItem(i);
+      return dataItem && dataItem.id;
     }
 
     function getContainerNode() {
@@ -1267,10 +1258,7 @@ if (typeof Slick === 'undefined') {
 
       stringArray.push('<div class="' + rowCss + '" style="top:' + getRowTop(row) + 'px">');
 
-      var m;
       for (var i = 0, ii = columns.length; i < ii; i++) {
-        m = columns[i];
-
         // Do not render cells outside of the viewport.
         if (columnPosRight[Math.min(ii - 1, i)] > range.leftPx) {
           if (columnPosLeft[i] > range.rightPx) {
@@ -1768,11 +1756,9 @@ if (typeof Slick === 'undefined') {
         try {
           // prevent default behaviour for special keys in IE browsers (F3, F5, etc.)
           e.originalEvent.keyCode = 0;
-        }
-
-        // ignore exceptions - setting the original event's keycode throws access denied exception for "Ctrl"
-        // (hitting control key only, nothing else), "Shift" (maybe others)
-        catch (error) {
+        } catch (error) {
+          // ignore exceptions - setting the original event's keycode throws access denied exception for "Ctrl"
+          // (hitting control key only, nothing else), "Shift" (maybe others)
         }
       }
     }
@@ -1883,7 +1869,7 @@ if (typeof Slick === 'undefined') {
       // read column number from .l<columnNumber> CSS class
       var cls = /l\d+/.exec(cellNode.className);
       if (!cls) {
-        throw 'getCellFromNode: cannot get cell - ' + cellNode.className;
+        throw new Error('getCellFromNode: cannot get cell - ' + cellNode.className);
       }
 
       return parseInt(cls[0].substr(1, cls[0].length - 1), 10);
@@ -2007,7 +1993,8 @@ if (typeof Slick === 'undefined') {
         right: 0,
         width: $(elem).outerWidth(),
         height: $(elem).outerHeight(),
-        visible: true, };
+        visible: true,
+      };
       box.bottom = box.top + box.height;
       box.right = box.left + box.width;
 
@@ -2070,14 +2057,12 @@ if (typeof Slick === 'undefined') {
       var rowAtTop = row * options.rowHeight;
       var rowAtBottom = (row + 1) * options.rowHeight - viewportH + (viewportHasHScroll ? scrollbarDimensions.height : 0);
 
-      // need to page down?
       if ((row + 1) * options.rowHeight > scrollTop + viewportH) {
+        // need to page down?
         scrollTo(rowAtBottom);
         render();
-      }
-
-      // or page up?
-      else if (row * options.rowHeight < scrollTop) {
+      } else if (row * options.rowHeight < scrollTop) {
+        // or page up?
         scrollTo(rowAtTop);
         render();
       }
@@ -2366,7 +2351,7 @@ if (typeof Slick === 'undefined') {
       }
 
       if (!options.enableCellNavigation && (dir === 'left' || dir === 'right')) {
-        return;
+        return null;
       }
 
       setFocus();
@@ -2509,7 +2494,7 @@ if (typeof Slick === 'undefined') {
 
     function getSelectedRows() {
       if (!selectionModel) {
-        throw 'Selection model is not set';
+        throw new Error('Selection model is not set');
       }
 
       return selectedRows;
@@ -2517,7 +2502,7 @@ if (typeof Slick === 'undefined') {
 
     function setSelectedRows(rows) {
       if (!selectionModel) {
-        throw 'Selection model is not set';
+        throw new Error('Selection model is not set');
       }
 
       selectionModel.setSelectedRanges(rowsToRanges(rows));
@@ -2624,4 +2609,10 @@ if (typeof Slick === 'undefined') {
 
     init();
   }
+
+  $.extend(true, window, {
+    Slick: {
+      Grid: SlickGrid,
+    },
+  });
 }(jQuery));
