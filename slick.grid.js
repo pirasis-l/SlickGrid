@@ -1252,7 +1252,7 @@ if (typeof Slick === 'undefined') {
         rowCss += ' ' + metadata.cssClasses;
       }
 
-      stringArray.push('<div class="' + rowCss + '" style="top:' + getRowTop(row) + 'px">');
+      stringArray.push('<div class="' + rowCss + '" style="transform:translateY(' + getRowTop(row) + 'px);">');
 
       for (var i = 0, ii = columns.length; i < ii; i++) {
         // Do not render cells outside of the viewport.
