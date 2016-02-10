@@ -42,7 +42,6 @@ if (typeof Slick === 'undefined') {
       rowHeight: 25,
       defaultColumnWidth: 80,
       enableRowNavigation: true,
-      enableCellNavigation: true,
       enableColumnReorder: true,
       forceFitColumns: false,
       formatterFactory: null,
@@ -104,10 +103,8 @@ if (typeof Slick === 'undefined') {
     var absoluteColumnMinWidth;
 
     var tabbingDirection = 1;
-    var activePosX;
     var activeRow;
-    var activeCell;
-    var activeCellNode = null;
+    var activeRowNode = null;
 
     var rowsCache = {};
     var numVisibleRows;
@@ -306,15 +303,15 @@ if (typeof Slick === 'undefined') {
 
       // remove the rows that are now outside of the data range
       // this helps avoid redundant calls to .removeRow() when the size of the data decreased by thousands of rows
-      for (var id in rowsCache) {
+      _.forEach(rowsCache, function (cache, id) {
         var row = data.getIdxById(id);
         if (row >= numberOfRows) {
           removeRowFromCache(id);
         }
-      }
+      });
 
-      if (activeCellNode && activeRow >= numberOfRows) {
-        resetActiveCell();
+      if (activeRowNode && activeRow >= numberOfRows) {
+        resetActiveRow();
       }
 
       var oldH = h;
@@ -358,7 +355,7 @@ if (typeof Slick === 'undefined') {
             $boundAncestors = $boundAncestors.add($elem);
           }
 
-          $elem.bind('scroll.' + uid, handleActiveCellPositionChange);
+          $elem.bind('scroll.' + uid, handleActiveRowPositionChange);
         }
       }
     }
@@ -1038,10 +1035,9 @@ if (typeof Slick === 'undefined') {
         }
       }
 
-      for (i in groups) {
-        var group = groups[i];
+      _.forEach(groups, function (group) {
         group.groupEl.width(group.width);
-      }
+      });
 
       updateColumnCaches();
     }
@@ -1280,9 +1276,6 @@ if (typeof Slick === 'undefined') {
           ' l' + cell + ' r' + Math.min(cLen - 1, cell) +
           ' b-l' + (cLen - 1 - cell) + ' b-r' + Math.max(0, cLen - 1 - cell) +
           (m.cssClass ? ' ' + m.cssClass : '');
-      if (row === activeRow && cell === activeCell) {
-        cellCss += (' active');
-      }
 
       // TODO:  merge them together in the setter
       for (var key in cellCssClasses) {
@@ -1305,25 +1298,24 @@ if (typeof Slick === 'undefined') {
     }
 
     function getInactiveRows() {
-      var results = [];
       var range = getRenderedRange();
-      for (var id in rowsCache) {
-        var row = data.getIdxById(id);
-        if (row == null || row < range.top || row > range.bottom) {
-          results.push(id);
-        }
-      }
 
-      return results;
+      return _(rowsCache)
+        .keys()
+        .reject(function (rowId) {
+          var row = data.getIdxById(rowId);
+          return row != null && range.top <= row && row <= range.bottom;
+        })
+        .value();
     }
 
     function cleanupRows(rangeToKeep) {
-      for (var id in rowsCache) {
+      _.forEach(rowsCache, function (cache, id) {
         var row = data.getIdxById(id);
         if (row !== activeRow && (row < rangeToKeep.top || row > rangeToKeep.bottom)) {
           removeRowFromCache(id);
         }
-      }
+      });
     }
 
     function invalidate() {
@@ -1333,9 +1325,9 @@ if (typeof Slick === 'undefined') {
     }
 
     function invalidateAllRows() {
-      for (var id in rowsCache) {
+      _.forEach(rowsCache, function (cache, id) {
         removeRowFromCache(id);
-      }
+      });
     }
 
     function removeRowFromCache(id) {
@@ -1520,9 +1512,7 @@ if (typeof Slick === 'undefined') {
 
         if (columnPosLeft[i] > range.rightPx ||
           columnPosRight[Math.min(columns.length - 1, i)] < range.leftPx) {
-          if (!(row === activeRow && i === activeCell)) {
-            cellsToRemove.push(i);
-          }
+          cellsToRemove.push(i);
         }
       }
 
@@ -1607,7 +1597,7 @@ if (typeof Slick === 'undefined') {
       var parentNode = $canvas[0];
       var stringArray = [];
       var rows = [];
-      var needToReselectCell = false;
+      var needToReselectRow = false;
       var dataLength = getDataLength();
 
       for (i = range.top, ii = range.bottom; i <= ii; i++) {
@@ -1625,8 +1615,8 @@ if (typeof Slick === 'undefined') {
         };
 
         appendRowHtml(stringArray, i, range, dataLength);
-        if (activeCellNode && activeRow === i) {
-          needToReselectCell = true;
+        if (activeRowNode && activeRow === i) {
+          needToReselectRow = true;
         }
       }
 
@@ -1639,8 +1629,8 @@ if (typeof Slick === 'undefined') {
         rowsCache[getDataItemId(rows[i])].rowNode = parentNode.appendChild(x.firstChild);
       }
 
-      if (needToReselectCell) {
-        activeCellNode = getCellNode(activeRow, activeCell);
+      if (needToReselectRow) {
+        activeRowNode = getRowNode(activeRow);
       }
     }
 
@@ -1721,7 +1711,7 @@ if (typeof Slick === 'undefined') {
     }
 
     function handleKeyDown(e) {
-      trigger(_this.onKeyDown, { row: activeRow, cell: activeCell }, e);
+      trigger(_this.onKeyDown, { row: activeRow }, e);
       var handled = e.isImmediatePropagationStopped();
       var keyCode = Slick.keyCode;
 
@@ -1733,10 +1723,6 @@ if (typeof Slick === 'undefined') {
           } else if (e.which === keyCode.PAGEUP) {
             navigatePageUp();
             handled = true;
-          } else if (e.which === keyCode.LEFT) {
-            handled = navigateLeft();
-          } else if (e.which === keyCode.RIGHT) {
-            handled = navigateRight();
           } else if (e.which === keyCode.UP) {
             handled = navigateUp();
           } else if (e.which === keyCode.DOWN) {
@@ -1779,12 +1765,9 @@ if (typeof Slick === 'undefined') {
       }
 
       if (options.enableRowNavigation) {
-        if (options.enableCellNavigation && (activeCell !== cell.cell || activeRow !== cell.row) && canCellBeActive(cell.row, cell.cell)) {
+        if (activeRow !== cell.row && canRowBeActive(cell.row)) {
           scrollRowIntoView(cell.row);
-          setActiveCellInternal(getCellNode(cell.row, cell.cell));
-        } else if (activeRow !== cell.row && canCellBeActive(cell.row, cell.cell)) {
-          scrollRowIntoView(cell.row);
-          setActiveCellInternal(getCellNode(cell.row, cell.cell));
+          setActiveRowInternal(getRowNode(cell.row));
         }
       }
     }
@@ -1925,8 +1908,8 @@ if (typeof Slick === 'undefined') {
 
     // Cell switching
 
-    function resetActiveCell() {
-      setActiveCellInternal(null, false);
+    function resetActiveRow() {
+      setActiveRowInternal(null, false);
     }
 
     function setFocus() {
@@ -1955,33 +1938,26 @@ if (typeof Slick === 'undefined') {
       }
     }
 
-    function setActiveCellInternal(newCell) {
-      if (activeCellNode != null) {
-        $(activeCellNode).removeClass('active');
-        var activeRowId = getDataItemId(activeRow);
-        if (rowsCache[activeRowId]) {
-          $(rowsCache[activeRowId].rowNode).removeClass('active');
-        }
+    function setActiveRowInternal(newRow) {
+      if (activeRowNode != null) {
+        $(activeRowNode).removeClass('active');
       }
 
-      var activeCellChanged = (activeCellNode !== newCell);
-      activeCellNode = newCell;
+      var activeCellChanged = activeRowNode !== newRow;
+      activeRowNode = newRow;
 
-      if (activeCellNode != null) {
-        activeRow = getRowFromNode(activeCellNode.parentNode);
-        activeCell = activePosX = getCellFromNode(activeCellNode);
+      if (activeRowNode != null) {
+        activeRow = getRowFromNode(newRow);
 
-        if (options.enableRowNavigation && options.enableCellNavigation) {
-          $(activeCellNode).addClass('active');
+        if (options.enableRowNavigation) {
+          $(activeRowNode).addClass('active');
         }
-
-        $(rowsCache[getDataItemId(activeRow)].rowNode).addClass('active');
       } else {
-        activeRow = activeCell = null;
+        activeRow = null;
       }
 
       if (activeCellChanged) {
-        trigger(_this.onActiveCellChanged, getActiveCell());
+        trigger(_this.onActiveRowChanged, getActiveRow());
       }
     }
 
@@ -2025,32 +2001,32 @@ if (typeof Slick === 'undefined') {
       return box;
     }
 
-    function getActiveCellPosition() {
-      return absBox(activeCellNode);
+    function getActiveRowPosition() {
+      return absBox(activeRowNode);
     }
 
     function getGridPosition() {
       return absBox($container[0]);
     }
 
-    function handleActiveCellPositionChange() {
-      if (!activeCellNode) {
+    function handleActiveRowPositionChange() {
+      if (!activeRowNode) {
         return;
       }
 
-      trigger(_this.onActiveCellPositionChanged, {});
+      trigger(_this.onActiveRowPositionChanged, {});
     }
 
-    function getActiveCell() {
-      if (!activeCellNode) {
+    function getActiveRow() {
+      if (!activeRowNode) {
         return null;
       }
 
-      return { row: activeRow, cell: activeCell };
+      return { row: activeRow };
     }
 
-    function getActiveCellNode() {
-      return activeCellNode;
+    function getActiveRowNode() {
+      return activeRowNode;
     }
 
     function scrollRowIntoView(row) {
@@ -2089,23 +2065,7 @@ if (typeof Slick === 'undefined') {
           row = 0;
         }
 
-        var cell = 0;
-        var prevCell = null;
-        var prevActivePosX = activePosX;
-        while (cell <= activePosX) {
-          if (canCellBeActive(row, cell)) {
-            prevCell = cell;
-          }
-
-          cell += 1;
-        }
-
-        if (prevCell != null) {
-          setActiveCellInternal(getCellNode(row, prevCell));
-          activePosX = prevActivePosX;
-        } else {
-          resetActiveCell();
-        }
+        setActiveRowInternal(getRowNode(row));
       }
     }
 
@@ -2117,208 +2077,33 @@ if (typeof Slick === 'undefined') {
       scrollPage(-1);
     }
 
-    function findFirstFocusableCell(row) {
-      var cell = 0;
-      while (cell < columns.length) {
-        if (canCellBeActive(row, cell)) {
-          return cell;
-        }
-
-        cell += 1;
-      }
-
-      return null;
-    }
-
-    function findLastFocusableCell(row) {
-      var cell = 0;
-      var lastFocusableCell = null;
-      while (cell < columns.length) {
-        if (canCellBeActive(row, cell)) {
-          lastFocusableCell = cell;
-        }
-
-        cell += 1;
-      }
-
-      return lastFocusableCell;
-    }
-
-    function gotoRight(row, cell) {
-      if (cell >= columns.length) {
-        return null;
-      }
-
-      do {
-        cell += 1;
-      } while (cell < columns.length && !canCellBeActive(row, cell));
-
-      if (cell < columns.length) {
-        return {
-          row: row,
-          cell: cell,
-          posX: cell,
-        };
-      }
-
-      return null;
-    }
-
-    function gotoLeft(row, cell) {
-      if (cell <= 0) {
-        return null;
-      }
-
-      var firstFocusableCell = findFirstFocusableCell(row);
-      if (firstFocusableCell === null || firstFocusableCell >= cell) {
-        return null;
-      }
-
-      var prev = {
-        row: row,
-        cell: firstFocusableCell,
-        posX: firstFocusableCell,
-      };
-      var pos;
-      while (true) {
-        pos = gotoRight(prev.row, prev.cell, prev.posX);
-        if (!pos) {
-          return null;
-        }
-
-        if (pos.cell >= cell) {
-          return prev;
-        }
-
-        prev = pos;
-      }
-    }
-
-    function gotoDown(row, cell, posX) {
-      var prevCell;
+    function gotoDown(row) {
       var dataLength = getDataLength();
       while (true) {
         if (++row >= dataLength) {
           return null;
         }
 
-        prevCell = cell = 0;
-        while (cell <= posX) {
-          prevCell = cell;
-          cell += 1;
-        }
-
-        if (canCellBeActive(row, prevCell)) {
+        if (canRowBeActive(row)) {
           return {
             row: row,
-            cell: prevCell,
-            posX: posX,
           };
         }
       }
     }
 
-    function gotoUp(row, cell, posX) {
-      var prevCell;
+    function gotoUp(row) {
       while (true) {
         if (--row < 0) {
           return null;
         }
 
-        prevCell = cell = 0;
-        while (cell <= posX) {
-          prevCell = cell;
-          cell += 1;
-        }
-
-        if (canCellBeActive(row, prevCell)) {
+        if (canRowBeActive(row)) {
           return {
             row: row,
-            cell: prevCell,
-            posX: posX,
           };
         }
       }
-    }
-
-    function gotoNext(row, cell, posX) {
-      if (row == null && cell == null) {
-        row = cell = posX = 0;
-        if (canCellBeActive(row, cell)) {
-          return {
-            row: row,
-            cell: cell,
-            posX: cell,
-          };
-        }
-      }
-
-      var pos = gotoRight(row, cell, posX);
-      if (pos) {
-        return pos;
-      }
-
-      var firstFocusableCell = null;
-      var dataLength = getDataLength();
-      while (++row < dataLength) {
-        firstFocusableCell = findFirstFocusableCell(row);
-        if (firstFocusableCell != null) {
-          return {
-            row: row,
-            cell: firstFocusableCell,
-            posX: firstFocusableCell,
-          };
-        }
-      }
-
-      return null;
-    }
-
-    function gotoPrev(row, cell, posX) {
-      if (row == null && cell == null) {
-        row = getDataLength() - 1;
-        cell = posX = columns.length - 1;
-        if (canCellBeActive(row, cell)) {
-          return {
-            row: row,
-            cell: cell,
-            posX: cell,
-          };
-        }
-      }
-
-      var pos;
-      var lastSelectableCell;
-      while (!pos) {
-        pos = gotoLeft(row, cell, posX);
-        if (pos) {
-          break;
-        }
-
-        if (--row < 0) {
-          return null;
-        }
-
-        cell = 0;
-        lastSelectableCell = findLastFocusableCell(row);
-        if (lastSelectableCell != null) {
-          pos = {
-            row: row,
-            cell: lastSelectableCell,
-            posX: lastSelectableCell,
-          };
-        }
-      }
-
-      return pos;
-    }
-
-    function navigateRight() {
-      return navigate('right');
-    }
-
-    function navigateLeft() {
-      return navigate('left');
     }
 
     function navigateDown() {
@@ -2346,12 +2131,8 @@ if (typeof Slick === 'undefined') {
         return false;
       }
 
-      if (!activeCellNode && dir !== 'prev' && dir !== 'next') {
+      if (!activeRowNode && dir !== 'prev' && dir !== 'next') {
         return false;
-      }
-
-      if (!options.enableCellNavigation && (dir === 'left' || dir === 'right')) {
-        return null;
       }
 
       setFocus();
@@ -2359,8 +2140,6 @@ if (typeof Slick === 'undefined') {
       var tabbingDirections = {
         up: -1,
         down: 1,
-        left: -1,
-        right: 1,
         prev: -1,
         next: 1,
       };
@@ -2369,21 +2148,18 @@ if (typeof Slick === 'undefined') {
       var stepFunctions = {
         up: gotoUp,
         down: gotoDown,
-        left: gotoLeft,
-        right: gotoRight,
-        prev: options.enableCellNavigation ? gotoPrev : gotoUp,
-        next: options.enableCellNavigation ? gotoNext : gotoDown,
+        prev: gotoUp,
+        next: gotoDown,
       };
       var stepFn = stepFunctions[dir];
-      var pos = stepFn(activeRow, activeCell, activePosX);
+      var pos = stepFn(activeRow);
       if (pos) {
-        scrollCellIntoView(pos.row, pos.cell);
-        setActiveCellInternal(getCellNode(pos.row, pos.cell));
-        activePosX = pos.posX;
+        scrollRowIntoView(pos.row);
+        setActiveRowInternal(getRowNode(pos.row));
         return true;
       }
 
-      setActiveCellInternal(getCellNode(activeRow, activeCell));
+      setActiveRowInternal(getRowNode(activeRow));
       return false;
     }
 
@@ -2415,8 +2191,8 @@ if (typeof Slick === 'undefined') {
       return null;
     }
 
-    function setActiveCell(row, cell) {
-      if (row > getDataLength() || row < 0 || cell >= columns.length || cell < 0) {
+    function setActiveRow(row) {
+      if (row > getDataLength() || row < 0) {
         return;
       }
 
@@ -2424,60 +2200,28 @@ if (typeof Slick === 'undefined') {
         return;
       }
 
-      scrollCellIntoView(row, cell);
-      setActiveCellInternal(getCellNode(row, cell));
+      scrollRowIntoView(row);
+      setActiveRowInternal(getRowNode(row));
     }
 
-    function canCellBeActive(row, cell) {
-      if (row >= getDataLength() || row < 0 || cell >= columns.length || cell < 0) {
+    function canRowBeActive(row) {
+      if (row >= getDataLength() || row < 0) {
         return false;
       }
 
-      var rowMetadata = data.getItemMetadata && data.getItemMetadata(row);
-      if (rowMetadata && typeof rowMetadata.focusable === 'boolean') {
-        return rowMetadata.focusable;
-      }
-
-      var columnMetadata = rowMetadata && rowMetadata.columns;
-      if (columnMetadata && columnMetadata[columns[cell].id] && typeof columnMetadata[columns[cell].id].focusable === 'boolean') {
-        return columnMetadata[columns[cell].id].focusable;
-      }
-
-      if (columnMetadata && columnMetadata[cell] && typeof columnMetadata[cell].focusable === 'boolean') {
-        return columnMetadata[cell].focusable;
-      }
-
-      return columns[cell].focusable;
-    }
-
-    function canCellBeSelected(row, cell) {
-      if (row >= getDataLength() || row < 0 || cell >= columns.length || cell < 0) {
-        return false;
-      }
-
-      var rowMetadata = data.getItemMetadata && data.getItemMetadata(row);
-      if (rowMetadata && typeof rowMetadata.selectable === 'boolean') {
-        return rowMetadata.selectable;
-      }
-
-      var columnMetadata = rowMetadata && rowMetadata.columns && (rowMetadata.columns[columns[cell].id] || rowMetadata.columns[cell]);
-      if (columnMetadata && typeof columnMetadata.selectable === 'boolean') {
-        return columnMetadata.selectable;
-      }
-
-      return columns[cell].selectable;
+      return true;
     }
 
     function gotoCell(row, cell) {
-      if (!canCellBeActive(row, cell)) {
+      if (!canRowBeActive(row)) {
         return;
       }
 
       scrollCellIntoView(row, cell);
 
-      var newCell = getCellNode(row, cell);
+      var newRow = getRowNode(row);
 
-      setActiveCellInternal(newCell);
+      setActiveRowInternal(newRow);
 
       setFocus();
     }
@@ -2533,8 +2277,8 @@ if (typeof Slick === 'undefined') {
       onColumnsResized: new Slick.Event(),
       onCellChange: new Slick.Event(),
       onBeforeDestroy: new Slick.Event(),
-      onActiveCellChanged: new Slick.Event(),
-      onActiveCellPositionChanged: new Slick.Event(),
+      onActiveRowChanged: new Slick.Event(),
+      onActiveRowPositionChanged: new Slick.Event(),
       onSelectedRowsChanged: new Slick.Event(),
       onCellCssStylesChanged: new Slick.Event(),
 
@@ -2582,23 +2326,20 @@ if (typeof Slick === 'undefined') {
 
       getCellFromPoint: getCellFromPoint,
       getCellFromEvent: getCellFromEvent,
-      getActiveCell: getActiveCell,
-      setActiveCell: setActiveCell,
-      getActiveCellNode: getActiveCellNode,
-      getActiveCellPosition: getActiveCellPosition,
-      resetActiveCell: resetActiveCell,
+      getActiveRow: getActiveRow,
+      setActiveRow: setActiveRow,
+      getActiveRowNode: getActiveRowNode,
+      getActiveRowPosition: getActiveRowPosition,
+      resetActiveRow: resetActiveRow,
       getRowNode: getRowNode,
       getRowNodeById: getRowNodeById,
       getCellNode: getCellNode,
       getCellNodeBox: getCellNodeBox,
-      canCellBeSelected: canCellBeSelected,
-      canCellBeActive: canCellBeActive,
+      canRowBeActive: canRowBeActive,
       navigatePrev: navigatePrev,
       navigateNext: navigateNext,
       navigateUp: navigateUp,
       navigateDown: navigateDown,
-      navigateLeft: navigateLeft,
-      navigateRight: navigateRight,
       navigatePageUp: navigatePageUp,
       navigatePageDown: navigatePageDown,
       gotoCell: gotoCell,
