@@ -1246,15 +1246,30 @@ if (typeof Slick === 'undefined') {
         rowCss += ' ' + options.addNewRowCssClass;
       }
 
-      var metadata = data.getItemMetadata && data.getItemMetadata(row);
+      var metadata = data.getItemMetadata && data.getItemMetadata(row) || {};
+      var cssClassesMeta = metadata.cssClasses;
+      var columnsMeta = metadata.columns;
 
-      if (metadata && metadata.cssClasses) {
-        rowCss += ' ' + metadata.cssClasses;
+      if (cssClassesMeta) {
+        rowCss += ' ' + cssClassesMeta;
       }
 
       stringArray.push('<div class="' + rowCss + '" style="transform:translateY(' + getRowTop(row) + 'px);">');
 
+      var colspan;
+      var column;
       for (var i = 0, ii = columns.length; i < ii; i++) {
+        column = columns[i];
+        colspan = 1;
+
+        if (columnsMeta) {
+          var columnMeta = columnsMeta[column.id] || columnsMeta[i];
+          colspan = columnMeta && columnMeta.colspan || 1;
+          if (colspan === '*') {
+            colspan = ii - i;
+          }
+        }
+
         // Do not render cells outside of the viewport.
         if (columnPosRight[Math.min(ii - 1, i)] > range.leftPx) {
           if (columnPosLeft[i] > range.rightPx) {
@@ -1262,19 +1277,23 @@ if (typeof Slick === 'undefined') {
             break;
           }
 
-          appendCellHtml(stringArray, row, i, d);
+          appendCellHtml(stringArray, row, i, colspan, d);
+        }
+
+        if (colspan > 1) {
+          i += colspan - 1;
         }
       }
 
       stringArray.push('</div>');
     }
 
-    function appendCellHtml(stringArray, row, cell, item) {
+    function appendCellHtml(stringArray, row, cell, colspan, item) {
       var m = columns[cell];
       var cLen = columns.length;
       var cellCss = 'slick-cell' +
-          ' l' + cell + ' r' + Math.min(cLen - 1, cell) +
-          ' b-l' + (cLen - 1 - cell) + ' b-r' + Math.max(0, cLen - 1 - cell) +
+          ' l' + cell + ' r' + Math.min(cLen - 1, cell + colspan - 1) +
+          ' b-l' + (cLen - 1 - cell) + ' b-r' + Math.max(0, cLen - 1 - cell + colspan - 1) +
           (m.cssClass ? ' ' + m.cssClass : '');
 
       // TODO:  merge them together in the setter
@@ -1294,7 +1313,9 @@ if (typeof Slick === 'undefined') {
 
       stringArray.push('</div>');
 
-      rowsCache[getDataItemId(row)].cellRenderQueue.push(cell);
+      var itemId = getDataItemId(row);
+      rowsCache[itemId].cellRenderQueue.push(cell);
+      rowsCache[itemId].cellColSpans[cell] = colspan;
     }
 
     function getInactiveRows() {
@@ -1510,8 +1531,9 @@ if (typeof Slick === 'undefined') {
         // This is a string, so it needs to be cast back to a number.
         i = i | 0;
 
+        var colspan = cacheEntry.cellColSpans[i];
         if (columnPosLeft[i] > range.rightPx ||
-          columnPosRight[Math.min(columns.length - 1, i)] < range.leftPx) {
+          columnPosRight[Math.min(columns.length - 1, i + colspan - 1)] < range.leftPx) {
           cellsToRemove.push(i);
         }
       }
@@ -1519,6 +1541,7 @@ if (typeof Slick === 'undefined') {
       var cellToRemove;
       while ((cellToRemove = cellsToRemove.pop()) != null) {
         cacheEntry.rowNode.removeChild(cacheEntry.cellNodesByColumnIdx[cellToRemove]);
+        delete cacheEntry.cellColSpans[cellToRemove];
         delete cacheEntry.cellNodesByColumnIdx[cellToRemove];
         totalCellsRemoved++;
       }
@@ -1545,6 +1568,9 @@ if (typeof Slick === 'undefined') {
         // Render missing cells.
         cellsAdded = 0;
 
+        var metadata = data.getItemMetadata && data.getItemMetadata(row);
+        metadata = metadata && metadata.columns;
+
         var d = getDataItem(row);
 
         // TODO:  shorten this loop (index? heuristics? binary search?)
@@ -1555,14 +1581,26 @@ if (typeof Slick === 'undefined') {
           }
 
           // Already rendered.
-          if (cacheEntry.cellNodesByColumnIdx[i]) {
+          var colspan = cacheEntry.cellColSpans[i];
+          if (!_.isNil(colspan)) {
+            i += colspan > 1 ? colspan - 1 : 0;
             continue;
           }
 
-          if (columnPosRight[Math.min(ii - 1, i)] > range.leftPx) {
-            appendCellHtml(stringArray, row, i, d);
+          colspan = 1;
+          if (metadata) {
+            var columnMeta = metadata[columns[i].id] || metadata[i];
+            colspan = columnMeta && columnMeta.colspan || 1;
+            if (colspan === '*') {
+              colspan = ii - i;
+            }
+          }
+          if (columnPosRight[Math.min(ii - 1, i + colspan - 1)] > range.leftPx) {
+            appendCellHtml(stringArray, row, i, colspan, d);
             cellsAdded++;
           }
+
+          i += colspan > 1 ? colspan - 1 : 0;
         }
 
         if (cellsAdded) {
@@ -1610,6 +1648,7 @@ if (typeof Slick === 'undefined') {
 
         rowsCache[id] = {
           rowNode: null,
+          cellColSpans: [],
           cellNodesByColumnIdx: [],
           cellRenderQueue: [],
         };
