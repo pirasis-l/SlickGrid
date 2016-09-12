@@ -1254,7 +1254,8 @@ if (typeof Slick === 'undefined') {
         rowCss += ' ' + cssClassesMeta;
       }
 
-      stringArray.push('<div class="' + rowCss + '" style="transform:translateY(' + getRowTop(row) + 'px);">');
+      var translateValue = 'translateY(' + getRowTop(row) + 'px)';
+      stringArray.push('<div class="' + rowCss + '" style="-webkit-transform:' + translateValue + ';transform:' + translateValue + ';">');
 
       var colspan;
       var column;
