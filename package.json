@@ -1,7 +1,11 @@
 {
-  "dependencies": {},
+  "peerDependencies": {
+    "jquery": "^2.2.0",
+    "jquery-ui": "^1.12.0"
+  },
   "devDependencies": {
-    "eslint": "~1.10.3",
-    "eslint-config-airbnb": "~5.0.0"
+    "eslint": "~3.5.0",
+    "eslint-config-airbnb-base": "~7.1.0",
+    "eslint-plugin-import": "~1.15.0"
   }
 }
