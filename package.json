@@ -1,7 +1,8 @@
 {
   "peerDependencies": {
     "jquery": "^2.2.0",
-    "jquery-ui": "^1.12.0"
+    "jquery-ui": "^1.12.0",
+    "lodash": "^4.11.0"
   },
   "devDependencies": {
     "eslint": "~3.5.0",

@@ -1,10 +1,15 @@
-extends: airbnb-base
+extends: airbnb-base/legacy
+env:
+  browser: true
 rules:
+  comma-dangle: [error, always-multiline]
   func-names: off
   no-cond-assign: off
   no-constant-condition: off
   no-param-reassign: off
+  no-plusplus: off
   no-shadow: off
+  no-underscore-dangle: off
   no-use-before-define: off
   max-len: off
   vars-on-top: off
